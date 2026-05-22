@@ -1,11 +1,15 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@/server/trpc/init";
+import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 
 export const documentRouter = createTRPCRouter({
   /**
    * Récupère tous les documents, du plus récent au plus ancien.
+   * Protégée : seuls les utilisateurs connectés y ont accès.
+   *
+   * En 3E, on filtrera par propriétaire (ctx.session.user.id).
+   * Pour l'instant, tous les utilisateurs connectés voient tous les documents.
    */
-  list: publicProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.document.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -13,9 +17,11 @@ export const documentRouter = createTRPCRouter({
 
   /**
    * Crée un nouveau document.
-   * Le schéma Zod valide les entrées avant que la procédure soit appelée.
+   * Protégée : seuls les utilisateurs connectés peuvent créer.
+   *
+   * En 3E, on enregistrera ctx.session.user.id comme propriétaire du document.
    */
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         title: z.string().min(1).max(200),
