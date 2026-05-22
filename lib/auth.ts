@@ -4,10 +4,15 @@ import { prisma } from "./prisma";
 
 /**
  * Configuration Better Auth.
- * - database : utilise notre client Prisma (singleton) avec adaptateur Postgres
- * - emailAndPassword : active l'inscription/connexion par email + mot de passe
  *
- * Les providers OAuth (Google, GitHub) seront ajoutés à la sous-phase 3F.
+ * - database : utilise notre client Prisma (singleton) avec adaptateur Postgres
+ * - emailAndPassword : inscription/connexion par email + mot de passe
+ * - socialProviders : authentification OAuth via Google et GitHub
+ *
+ * Better Auth lit automatiquement les variables d'environnement :
+ * - BETTER_AUTH_SECRET, BETTER_AUTH_URL
+ * - GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
+ * - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
  */
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -15,5 +20,15 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+  },
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
   },
 });

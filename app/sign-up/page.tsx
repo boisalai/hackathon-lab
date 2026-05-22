@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signUp } from "@/lib/auth-client";
+import { signIn, signUp } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,10 +39,18 @@ export default function SignUpPage() {
       return;
     }
 
-    // Inscription réussie — Better Auth a déjà créé la session.
-    // On redirige vers l'accueil.
     router.push("/");
     router.refresh();
+  }
+
+  async function handleOAuth(provider: "github" | "google") {
+    setError(null);
+    // Note : signIn.social gère AUSSI la création de compte si l'utilisateur
+    // n'en a pas encore. Pas besoin d'une signUp.social distincte.
+    await signIn.social({
+      provider,
+      callbackURL: "/",
+    });
   }
 
   return (
@@ -51,7 +59,7 @@ export default function SignUpPage() {
         <CardHeader>
           <CardTitle>Créer un compte</CardTitle>
           <CardDescription>
-            Inscris-toi avec ton email et un mot de passe.
+            Inscris-toi avec ton email, ou via Google/GitHub.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -87,9 +95,32 @@ export default function SignUpPage() {
           >
             {isPending ? "Création…" : "Créer mon compte"}
           </Button>
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-neutral-200" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-2 text-neutral-500">ou</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => handleOAuth("github")}
+          >
+            Continuer avec GitHub
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => handleOAuth("google")}
+          >
+            Continuer avec Google
+          </Button>
+
           <p className="text-sm text-neutral-500 text-center pt-2">
             Déjà un compte ?{" "}
             <Link href="/sign-in" className="underline">
