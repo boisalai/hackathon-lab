@@ -1,35 +1,26 @@
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { DocumentForm } from "@/components/documents/document-form";
 import { DocumentList } from "@/components/documents/document-list";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
   return (
     <main className="min-h-svh p-6 bg-neutral-50">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Hackathon Lab — Bac à sable</CardTitle>
-            <CardDescription>
-              Phase 2 — Créer et lister des documents via tRPC + Prisma.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className="max-w-2xl mx-auto space-y-6">
+        {session ? (
+          <>
             <DocumentForm />
-          </CardContent>
-        </Card>
-
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-neutral-700">
-            Documents existants
-          </h2>
-          <DocumentList />
-        </section>
+            <DocumentList />
+          </>
+        ) : (
+          <p className="text-sm text-neutral-600 text-center pt-12">
+            Connecte-toi pour voir et créer des documents.
+          </p>
+        )}
       </div>
     </main>
   );
