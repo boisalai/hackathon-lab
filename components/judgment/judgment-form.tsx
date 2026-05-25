@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useTRPC } from "@/lib/trpc/client";
+import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -12,43 +11,62 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { judgmentSummarySchema } from "@/lib/judgment-schema";
 import { JudgmentSummary } from "@/components/judgment/judgment-summary";
 
+// Wrapper : permet de "réinitialiser" en remontant le composant interne
 export function JudgmentForm() {
-  const trpc = useTRPC();
+  const [iteration, setIteration] = useState(0);
+  return (
+    <JudgmentFormStreaming
+      key={iteration}
+      onReset={() => setIteration((i) => i + 1)}
+    />
+  );
+}
+
+function JudgmentFormStreaming({ onReset }: { onReset: () => void }) {
   const [text, setText] = useState("");
 
-  const summarize = useMutation(trpc.judgment.summarize.mutationOptions());
-
-  function handleSubmit() {
-    summarize.mutate({ text });
-  }
-
-  function handleReset() {
-    summarize.reset();
-    setText("");
-  }
+  const { object, submit, isLoading, error, stop } = useObject({
+    api: "/api/judgment/summarize",
+    schema: judgmentSummarySchema,
+  });
 
   const charCount = text.length;
   const isValid = charCount >= 50 && charCount <= 50_000;
 
-  // Mode résultat : formulaire masqué, résumé en pleine largeur
-  if (summarize.data) {
+  // Mode streaming OU résultat
+  if (isLoading || object) {
     return (
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle>Résumé du jugement</CardTitle>
+            <CardTitle>
+              {isLoading ? "Résumé en cours…" : "Résumé du jugement"}
+            </CardTitle>
             <CardDescription>
               {text.length.toLocaleString("fr-CA")} caractères analysés
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={handleReset}>
-            Nouveau résumé
-          </Button>
+          {isLoading ? (
+            <Button variant="outline" size="sm" onClick={stop}>
+              Arrêter
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={onReset}>
+              Nouveau résumé
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-          <JudgmentSummary summary={summarize.data.summary} />
+          {object ? (
+            <JudgmentSummary summary={object} isStreaming={isLoading} />
+          ) : (
+            <p className="text-sm text-neutral-500">
+              Réception des premières sections…
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -71,7 +89,6 @@ export function JudgmentForm() {
           onChange={(e) => setText(e.target.value)}
           rows={12}
           className="resize-none max-h-96"
-          disabled={summarize.isPending}
         />
 
         <div className="flex items-center justify-between text-xs text-neutral-500">
@@ -84,16 +101,16 @@ export function JudgmentForm() {
         </div>
 
         <Button
-          onClick={handleSubmit}
-          disabled={!isValid || summarize.isPending}
+          onClick={() => submit({ text })}
+          disabled={!isValid}
           className="w-full"
         >
-          {summarize.isPending ? "Résumé en cours…" : "Résumer"}
+          Résumer
         </Button>
 
-        {summarize.error && (
+        {error && (
           <p className="text-sm text-red-600">
-            Erreur : {summarize.error.message}
+            Erreur : {error.message}
           </p>
         )}
       </CardContent>
