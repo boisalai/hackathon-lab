@@ -60,7 +60,6 @@ export async function POST(req: Request) {
     },
   });
 
-return result.toTextStreamResponse();
   // 4. Réponse en SSE compatible useObject
   return result.toTextStreamResponse();
 }
