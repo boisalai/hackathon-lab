@@ -36,6 +36,7 @@ function JudgmentFormStreaming({ onReset }: { onReset: () => void }) {
   const charCount = text.length;
   const isValid = charCount >= 50 && charCount <= 50_000;
 
+
   // Mode streaming OU résultat
   if (isLoading || object) {
     return (

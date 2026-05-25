@@ -3,6 +3,7 @@ import { generateText, Output } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 import { SYSTEM_PROMPT, judgmentSummarySchema } from "@/lib/judgment-schema";
+import { qwen3_8b } from "@/lib/local-llm";
 
 export const judgmentRouter = createTRPCRouter({
   summarize: protectedProcedure
