@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "@/server/trpc/init";
 import { documentRouter } from "@/server/trpc/routers/document";
+import { judgmentRouter } from "@/server/trpc/routers/judgment";
 
 /**
  * Routeur racine : agrège tous les routeurs de l'application.
@@ -8,6 +9,7 @@ import { documentRouter } from "@/server/trpc/routers/document";
  */
 export const appRouter = createTRPCRouter({
   document: documentRouter,
+  judgment: judgmentRouter,
 });
 
 /**
