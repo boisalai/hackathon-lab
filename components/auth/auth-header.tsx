@@ -25,7 +25,7 @@ export function AuthHeader() {
   }
 
   return (
-    <header className="h-12 flex items-center justify-between px-6 border-b border-neutral-200 bg-white">
+    <header className="h-12 flex items-center justify-between px-6 bg-white">
       <Link href="/" className="text-sm font-semibold text-neutral-900">
         Hackathon Lab
       </Link>
