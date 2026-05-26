@@ -27,19 +27,51 @@ model Document {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  documents     Document[]
+  id              String          @id
+  name            String
+  email           String
+  emailVerified   Boolean         @default(false)
+  image           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  sessions        Session[]
+  accounts        Account[]
+  documents       Document[]
+  securityEvents  SecurityEvent[]
 
   @@unique([email])
   @@map("user")
+}
+
+// Phase 6C — Décision prise par le garde-fou avant un appel modèle.
+enum SecurityDecision {
+  BLOCKED       // Le détecteur a trouvé des PII et l'utilisateur n'a pas confirmé.
+  OVERRIDDEN    // L'utilisateur a vu l'avertissement et a confirmé l'envoi.
+}
+
+// Phase 6C — Journal d'événements de sécurité par utilisateur.
+//
+// On enregistre uniquement les événements porteurs d'une décision : blocage
+// par le garde-fou OU override explicite. Les scans qui ne trouvent rien
+// (texte propre) ne sont pas journalisés — ils ne portent aucune décision.
+model SecurityEvent {
+  id        String           @id @default(cuid())
+  createdAt DateTime         @default(now())
+
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Verticale concernée — généralisable au Résumeur ou autres futures verticales.
+  route     String
+  decision  SecurityDecision
+  modelId   String           // Modèle sélectionné au moment de l'événement.
+
+  // Comptage par type pour l'affichage compact dans la table.
+  summary   Json             // Record<LeakType, number>
+  // Findings complets pour audit/debug (snippets + spans + sévérités).
+  findings  Json             // Finding[]
+
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model Session {

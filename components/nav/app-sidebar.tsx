@@ -40,6 +40,12 @@ const navItems = [
     icon: ShieldCheck,
     available: false, // 5C
   },
+  {
+    label: "Journal de sécurité",
+    href: "/security",
+    icon: ShieldCheck,
+    available: true, // 6C
+  },
 ];
 
 export function AppSidebar() {
