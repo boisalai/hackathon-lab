@@ -32,7 +32,7 @@ const navItems = [
     label: "Anonymiseur",
     href: "/anonymize",
     icon: Eye,
-    available: false, // 5B
+    available: true,
   },
   {
     label: "Audit de clauses",

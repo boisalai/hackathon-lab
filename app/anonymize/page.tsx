@@ -25,7 +25,7 @@ export default async function AnonymizePage() {
   return (
     <main className="min-h-svh p-6 bg-neutral-50">
       <div className="max-w-3xl mx-auto">
-        <AnonymizeForm models={clientModels} defaultModelId={DEFAULT_MODEL_ID} />
+        <AnonymizeForm models={clientModels} defaultModelId="qwen3-8b-local" />
       </div>
     </main>
   );

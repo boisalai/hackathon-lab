@@ -13,29 +13,45 @@ import {
 } from "@/components/ui/card";
 import { judgmentSummarySchema } from "@/lib/judgment-schema";
 import { JudgmentSummary } from "@/components/judgment/judgment-summary";
+import {
+  ModelSelector,
+  type ClientModelInfo,
+} from "@/components/anonymize/model-selector";
+
+type Props = {
+  models: ClientModelInfo[];
+  defaultModelId: string;
+};
 
 // Wrapper : permet de "réinitialiser" en remontant le composant interne
-export function JudgmentForm() {
+export function JudgmentForm({ models, defaultModelId }: Props) {
   const [iteration, setIteration] = useState(0);
   return (
     <JudgmentFormStreaming
       key={iteration}
+      models={models}
+      defaultModelId={defaultModelId}
       onReset={() => setIteration((i) => i + 1)}
     />
   );
 }
 
-function JudgmentFormStreaming({ onReset }: { onReset: () => void }) {
+function JudgmentFormStreaming({
+  models,
+  defaultModelId,
+  onReset,
+}: Props & { onReset: () => void }) {
   const [text, setText] = useState("");
+  const [modelId, setModelId] = useState(defaultModelId);
 
   const { object, submit, isLoading, error, stop } = useObject({
     api: "/api/judgment/summarize",
     schema: judgmentSummarySchema,
   });
 
+  const selectedModel = models.find((m) => m.id === modelId);
   const charCount = text.length;
   const isValid = charCount >= 50 && charCount <= 50_000;
-
 
   // Mode streaming OU résultat
   if (isLoading || object) {
@@ -47,7 +63,8 @@ function JudgmentFormStreaming({ onReset }: { onReset: () => void }) {
               {isLoading ? "Résumé en cours…" : "Résumé du jugement"}
             </CardTitle>
             <CardDescription>
-              {text.length.toLocaleString("fr-CA")} caractères analysés
+              {text.length.toLocaleString("fr-CA")} caractères analysés ·{" "}
+              {selectedModel?.label}
             </CardDescription>
           </div>
           {isLoading ? (
@@ -84,6 +101,11 @@ function JudgmentFormStreaming({ onReset }: { onReset: () => void }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-neutral-700">Modèle</label>
+          <ModelSelector models={models} value={modelId} onChange={setModelId} />
+        </div>
+
         <Textarea
           placeholder="Colle le texte du jugement ici…"
           value={text}
@@ -102,7 +124,7 @@ function JudgmentFormStreaming({ onReset }: { onReset: () => void }) {
         </div>
 
         <Button
-          onClick={() => submit({ text })}
+          onClick={() => submit({ text, modelId })}
           disabled={!isValid}
           className="w-full"
         >

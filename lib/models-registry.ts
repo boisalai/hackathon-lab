@@ -4,20 +4,20 @@ import type { LanguageModel } from "ai";
 
 export type ModelProvider = "local" | "anthropic";
 
+export type ModelCapability =
+  | "streaming-structured" // Supporte streamText + Output.object (response_format json_schema)
+  | "tool-calling"; // Supporte les outils (presque tous les modèles modernes)
+
 export type ModelInfo = {
   id: string;
   label: string;
   provider: ModelProvider;
   description: string;
-  available: boolean; // Si false, l'option est grisée dans le sélecteur
+  available: boolean;
+  capabilities: ModelCapability[];
   model: LanguageModel;
 };
 
-/**
- * Catalogue des modèles disponibles.
- * Pour ajouter un modèle local : démarrer mlx_lm.server avec --model,
- * puis ajouter une entrée ici avec available: true.
- */
 export const MODELS: Record<string, ModelInfo> = {
   "qwen3-8b-local": {
     id: "qwen3-8b-local",
@@ -25,6 +25,7 @@ export const MODELS: Record<string, ModelInfo> = {
     provider: "local",
     description: "Rapide et privé. Texte court à moyen.",
     available: true,
+    capabilities: ["tool-calling"], // PAS de streaming structuré
     model: qwen3_8b,
   },
   "qwen3.6-27b-local": {
@@ -32,8 +33,9 @@ export const MODELS: Record<string, ModelInfo> = {
     label: "Qwen 3.6 27B (local)",
     provider: "local",
     description: "Plus capable. Nécessite mlx_lm.server avec ce modèle.",
-    available: false, // Pas chargé pour l'instant
-    model: qwen3_8b, // Placeholder — sera remplacé quand on lancera un second serveur
+    available: false,
+    capabilities: ["tool-calling"],
+    model: qwen3_8b,
   },
   "claude-haiku-4-5": {
     id: "claude-haiku-4-5",
@@ -41,6 +43,7 @@ export const MODELS: Record<string, ModelInfo> = {
     provider: "anthropic",
     description: "Rapide, économique. Bon défaut cloud.",
     available: true,
+    capabilities: ["streaming-structured", "tool-calling"],
     model: anthropic("claude-haiku-4-5-20251001"),
   },
   "claude-sonnet-4-6": {
@@ -49,6 +52,7 @@ export const MODELS: Record<string, ModelInfo> = {
     provider: "anthropic",
     description: "Équilibré. Bon pour raisonnement structuré.",
     available: true,
+    capabilities: ["streaming-structured", "tool-calling"],
     model: anthropic("claude-sonnet-4-6"),
   },
   "claude-opus-4-7": {
@@ -57,11 +61,12 @@ export const MODELS: Record<string, ModelInfo> = {
     provider: "anthropic",
     description: "Phare actuel. Tâches complexes. Coût le plus élevé.",
     available: true,
+    capabilities: ["streaming-structured", "tool-calling"],
     model: anthropic("claude-opus-4-7"),
   },
 };
 
-export const DEFAULT_MODEL_ID = "qwen3-8b-local";
+export const DEFAULT_MODEL_ID = "claude-haiku-4-5";
 
 export function getModel(id: string): ModelInfo {
   const model = MODELS[id];
@@ -71,5 +76,15 @@ export function getModel(id: string): ModelInfo {
   return model;
 }
 
-// Liste affichable pour le sélecteur UI
 export const MODEL_LIST = Object.values(MODELS);
+
+/**
+ * Filtre les modèles selon les capacités requises.
+ * Usage : MODELS_WITH("streaming-structured") pour les modèles compatibles avec
+ * un endpoint streaming + sortie structurée.
+ */
+export function modelsWith(...capabilities: ModelCapability[]): ModelInfo[] {
+  return MODEL_LIST.filter((m) =>
+    capabilities.every((cap) => m.capabilities.includes(cap))
+  );
+}

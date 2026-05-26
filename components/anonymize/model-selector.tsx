@@ -34,7 +34,7 @@ export function ModelSelector({ models, value, onChange, disabled }: Props) {
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full h-auto py-6">
         <SelectValue placeholder="Choisir un modèle" />
       </SelectTrigger>
       <SelectContent>
