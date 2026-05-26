@@ -15,6 +15,7 @@ export type ModelInfo = {
   description: string;
   available: boolean;
   capabilities: ModelCapability[];
+  fallbackTo?: string;  // ← NOUVEAU : id du modèle de remplacement si celui-ci échoue
   model: LanguageModel;
 };
 
@@ -26,6 +27,7 @@ export const MODELS: Record<string, ModelInfo> = {
     description: "Rapide et privé. Texte court à moyen.",
     available: true,
     capabilities: ["tool-calling"], // PAS de streaming structuré
+    fallbackTo: "claude-haiku-4-5",  // ← AJOUT
     model: qwen3_8b,
   },
   "qwen3.6-27b-local": {
@@ -35,6 +37,7 @@ export const MODELS: Record<string, ModelInfo> = {
     description: "Plus capable. Nécessite mlx_lm.server avec ce modèle.",
     available: false,
     capabilities: ["tool-calling"],
+    fallbackTo: "claude-haiku-4-5",  // ← AJOUT
     model: qwen3_8b,
   },
   "claude-haiku-4-5": {

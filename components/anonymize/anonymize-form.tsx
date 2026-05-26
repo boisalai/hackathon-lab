@@ -21,10 +21,16 @@ import {
   type ClientModelInfo,
 } from "@/components/anonymize/model-selector";
 
+type FallbackMeta = {
+  modelUsed: string;
+  modelLabel: string;
+  fellBack: boolean;
+};
+
 type State =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "success"; data: AnonymizeResultType }
+  | { status: "success"; data: AnonymizeResultType; meta?: FallbackMeta }
   | { status: "error"; message: string };
 
 type Props = {
@@ -62,7 +68,10 @@ export function AnonymizeForm({ models, defaultModelId }: Props) {
         return;
       }
 
-      setState({ status: "success", data: validated.data });
+      // Extraire la méta-info (présente si le route handler la fournit)
+      const meta: FallbackMeta | undefined = json._meta;
+
+      setState({ status: "success", data: validated.data, meta });
     } catch (error) {
       setState({
         status: "error",
@@ -107,9 +116,23 @@ export function AnonymizeForm({ models, defaultModelId }: Props) {
             Nouvelle anonymisation
           </Button>
         </CardHeader>
-        <CardContent>
-          <AnonymizeResult result={state.data} />
-        </CardContent>
+          <CardContent className="space-y-4">
+            {state.meta?.fellBack && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <Cloud className="h-4 w-4 text-amber-700 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-amber-800">
+                  <p className="font-medium">Bascule automatique vers un modèle cloud</p>
+                  <p className="mt-0.5">
+                    Le modèle local n'a pas répondu (serveur arrêté ?). La requête a été
+                    traitée par <span className="font-semibold">{state.meta.modelLabel}</span>{" "}
+                    pour ne pas vous faire attendre. Vos données ont été envoyées à
+                    Anthropic pour cette requête.
+                  </p>
+                </div>
+              </div>
+            )}
+            <AnonymizeResult result={state.data} />
+          </CardContent>
       </Card>
     );
   }
